@@ -1,0 +1,35 @@
+---
+title: "ARIMA_2_15"
+author: "Kamin Atsavasirilert"
+date: "2024-09-11"
+output:
+  pdf_document: default
+  html_document: default
+---
+# Double difference makes the data looks much better (trend elimination)
+```{r setup}
+library(forecast)
+library(LSTS)
+
+data = read.csv("q-gdpdef-1.txt",sep="", header=TRUE)
+plot(data$gdpdef)
+plot(diff(data$gdpdef))
+plot(diff(diff(data$gdpdef)))
+acf(diff(diff(data$gdpdef)))
+pacf(diff(diff(data$gdpdef)))
+```
+#Try using auto arima fit with BIC criteria (didn't work)
+```{r cars}
+fit <- auto.arima(data$gdpdef,max.p = 15,max.q = 15, max.d = 15,seasonal = TRUE,ic = 'bic')
+fit
+Box.Ljung.Test(residuals(fit), lag = 50)
+forecast(fit,h=4)
+```
+#Try arima(3,2,1) as indicated from ACF and PACF
+```{r cars2}
+fit2 = arima(data$gdpdef,order = c(3,2,1))
+fit2
+Box.Ljung.Test(residuals(fit2), lag = 50)
+predict(fit2, n.ahead=4)
+```
+#The Ljung-Box test result looks much better!

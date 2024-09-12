@@ -1,0 +1,38 @@
+---
+title: "STAT556_HW1"
+author: "Kamin Atsavasirilert"
+date: "2024-09-11"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup}
+library(LSTS)
+
+data = read.csv("m-ew6299-1.txt", header=FALSE)
+acf(data)
+pacf(data)
+```
+
+#AR(1)
+```{r cars}
+
+ar_model = arima(data, order=c(1,0,0))
+ar_model
+predict(ar_model, n.ahead = 2)
+plot(1:456, residuals(ar_model))
+Box.Ljung.Test(residuals(ar_model), lag = 10)
+```
+
+#MA(1)
+```{r pressure, echo=FALSE}
+
+ma_model = arima(data, order=c(0,0,1))
+ma_model
+predict(ma_model, n.ahead = 2)
+plot(1:456, residuals(ma_model))
+Box.Ljung.Test(residuals(ma_model), lag = 10)
+```
+
+#ANSWER2.13.d: In terms of AIC, MA(1) model better fits the data than the AR(1).
