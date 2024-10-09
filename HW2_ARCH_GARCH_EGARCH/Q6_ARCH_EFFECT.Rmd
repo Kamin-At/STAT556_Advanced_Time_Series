@@ -1,0 +1,37 @@
+---
+title: "Q6_ARCH_EFFECT"
+author: "Kamin Atsavasirilert"
+date: "2024-09-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(fGarch)
+```
+
+# Read data
+
+```{r cars}
+data = read.csv("m-mrk4608.txt", sep="")
+```
+
+# Q.a Based on the results from the autocorrelation, we do not observe any serial correlation from the log returns. => As this is a linear relation, the blue line is ok to be used.
+
+```{r pressure, echo=FALSE}
+log_ret = log(1 + data$mrk)
+acf(log_ret)
+```
+
+# Q.b As we accept the alternative hypothesis for both 6 and 12 lags, this indicates ARCH effects in the log return sequence.
+```{r 1, echo=FALSE}
+Box.test(log_ret^2,6,type="Ljung")
+Box.test(log_ret^2,12,type="Ljung")
+```
+
+# Q.c Based on PACF => we try lag-3 as the blue line is not completely trustworthy, and see significance at lag 3.
+```{r 2, echo=FALSE}
+acf(log_ret^2)
+pacf(log_ret^2)
+model = garchFit(~garch(3,0), data=log_ret, cond.dist = "norm", trace = FALSE)
+summary(model)
+```

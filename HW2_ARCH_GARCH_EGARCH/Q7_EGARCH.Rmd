@@ -1,0 +1,36 @@
+---
+title: "Q7_EGARCH"
+author: "Kamin Atsavasirilert"
+date: "2024-09-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(fGarch)
+library(rugarch)
+```
+
+
+# Read and prepare data
+```{r cars}
+data = read.csv("m-gmsp5008.txt", sep="")
+log_ret = log(data$gm + 1)
+```
+## Q7.a As omega term is not statistically different from 0 with 95% confidence level, we should remove it from the model.
+```{r pressure, echo=FALSE}
+model = garchFit(~garch(1,1), data=log_ret, trace=FALSE, cond.dist = "norm")
+summary(model)
+```
+## Q7.b As the estimated shape v = 9.418 with S.E. = 2.968, the t-statistic of v = (9.418-6)/2.968 = 1.15, meaning we do not have enough evidence to reject the null hypothesis.
+```{r 1, echo=FALSE}
+t_model = garchFit(~garch(1,1), cond.dist = "std", data=log_ret, trace=FALSE)
+summary(t_model)
+```
+## Q7.c As the fitted model indicates no significance for omega term, we should exclude it and the rest parameters should work fine.
+```{r 2, echo=FALSE}
+tmp_egarch = ugarchspec(variance.model=list(model="eGARCH", garchOrder=c(1,1)),
+                          mean.model=list(armaOrder=c(0,0), include.mean=TRUE),
+                          distribution.model="norm")
+egarch_model = ugarchfit(data = log_ret, spec = tmp_egarch)
+egarch_model
+```

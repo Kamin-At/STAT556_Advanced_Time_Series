@@ -1,0 +1,85 @@
+---
+title: "Q5_GARCH"
+author: "Kamin Atsavasirilert"
+date: "2024-09-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(fGarch)
+```
+
+# Read data and calculate log returns
+## For ACF, PACF => we cannot trust the blue line as this is for non-linear relationship.
+```{r cars}
+data = read.csv("m-intc7308.txt", sep="")
+data$log_ret = log(1+data$rtn)
+
+acf(data$log_ret^2)
+pacf(data$log_ret^2)
+```
+
+## GARCH(1,1) with normal innovation.
+
+```{r pressure, echo=FALSE}
+norm_model=garchFit(~garch(1,1),data=data$log_ret, cond.dist = "norm", trace = FALSE)
+summary(norm_model) 
+```
+
+
+# Goodness of fit check
+```{r 1}
+residual_norm=residuals(norm_model,standardize=T)
+Box.test(residual_norm,10,type="Ljung")
+Box.test(residual_norm^2,10,type="Ljung")
+```
+
+## GARCH(1,1) with student-t innovation.
+
+```{r 2, echo=FALSE}
+mean(data$log_ret)
+t_model=garchFit(~garch(1,1),data=data$log_ret, cond.dist = "std", trace = FALSE)
+summary(t_model) 
+```
+
+
+# Goodness of fit check
+```{r 3}
+residual_t=residuals(t_model,standardize=T)
+Box.test(residual_t,10,type="Ljung")
+Box.test(residual_t^2,10,type="Ljung")
+```
+
+# As GARCH(1,1) with student-t innovation has lower AIC, we use the model for prediction.
+```{r 4}
+#initial the process at the sample variance
+nobs = length(data$log_ret)
+e<-data$log_ret-mean(data$log_ret)
+e2<-e^2
+
+predvar = rep(NA, nobs)
+predvar[1]<-var(data$log_ret)
+omega = 0.001184
+alpha1 = 0.105488
+beta1 = 0.818072
+
+#loop starting at 2 because of lagged equation
+for (t in 2:nobs)
+{
+  #GARCH(1,1) equation
+  predvar[t]<-omega+alpha1*e2[t-1]+beta1*predvar[t-1]
+}
+```
+
+## 1-step and 5-step predictions
+```{r 5}
+nstep = 5
+predvar_5step = rep(NA, nstep)
+predvar_5step[1] = predvar[nobs]
+for (j in 1:(nstep-1))
+{
+  predvar_5step[j+1]<-omega+(alpha1+beta1)*predvar_5step[j]
+}
+cat("1-step pred: ", predvar_5step[1])
+cat("5-step pred: ", predvar_5step)
+```
