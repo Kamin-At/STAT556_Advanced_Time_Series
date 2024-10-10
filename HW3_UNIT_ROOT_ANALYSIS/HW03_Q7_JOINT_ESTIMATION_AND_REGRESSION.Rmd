@@ -1,0 +1,85 @@
+---
+title: "Q7_Regression"
+author: "Kamin Atsavasirilert"
+date: "2024-10-09"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(LSTS)
+library(fUnitRoots)
+```
+
+## Date preparation => Removing non-stationarity 
+
+```{r cars}
+
+df=read.table("w-Aaa.txt",sep = "")
+
+aaa = df$V4
+
+plot(aaa)
+plot(diff(aaa),type="l")
+acf(aaa)
+pacf(diff(aaa))
+
+df=read.table("w-Baa.txt",sep = "")
+
+baa = df$V4
+
+plot(baa)
+plot(diff(baa),type="l")
+acf(baa)
+pacf(diff(baa))
+
+d_baa = diff(baa)
+d_aaa = diff(aaa)
+
+acf(d_baa)
+pacf(d_baa)
+
+acf(d_aaa)
+pacf(d_aaa)
+```
+
+## Simple regression model and model checking
+
+```{r pressure, echo=FALSE}
+model = arima(d_aaa,order=c(0,0,0),xreg=d_baa,include.mean=F)#lm(d_aaa~d_baa)
+model
+
+adfTest(model$residuals,lags=2,type=("c"))
+adfTest(model$residuals,lags=2,type=("ct"))
+acf(model$residuals)
+```
+
+## Try joint estimation with MA(1)
+
+```{r pressure2, echo=FALSE}
+new_model1 = arima(d_aaa,order=c(0,0,1),xreg=d_baa,include.mean=F)
+new_model1
+#R^2
+rsq1=(sum(d_aaa^2)-sum(new_model1$residuals^2))/sum(d_aaa^2)
+rsq1
+adfTest(new_model1$residuals,lags=2,type=("c"))
+adfTest(new_model1$residuals,lags=2,type=("ct"))
+acf(new_model1$residuals)
+```
+
+## Try joint estimation with AR(1)
+
+```{r pressure3, echo=FALSE}
+new_model2 = arima(d_aaa,order=c(1,0,0),xreg=d_baa,include.mean=T)
+new_model2
+#R^2
+rsq2=(sum(d_aaa^2)-sum(new_model2$residuals^2))/sum(d_aaa^2)
+rsq2
+adfTest(new_model2$residuals,lags=2,type=("c"))
+adfTest(new_model2$residuals,lags=2,type=("ct"))
+acf(new_model2$residuals)
+```
+
+## Conclusion: Based on the information criteria (AIC), I chose the joint estimation with AR(1) term.
+### The final relationship is: d_aaa_t = 0.2394 * d_aaa_[t-1] + 0.9472 * d_baa_t + epsilon. Where the epsilon is the forecast error (no guarantee to be iid).

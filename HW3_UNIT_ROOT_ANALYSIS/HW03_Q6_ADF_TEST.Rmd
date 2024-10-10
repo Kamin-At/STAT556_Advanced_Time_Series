@@ -1,0 +1,48 @@
+---
+title: "HW03_Q6_ADF_TEST"
+author: "Kamin Atsavasirilert"
+date: "2024-10-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+library(fUnitRoots)
+library(LSTS)
+```
+
+## Read data
+
+```{r cars}
+
+df=read.table("w-Aaa.txt",sep = "")
+
+data = df$V4
+
+plot(data)
+plot(diff(data),type="l")
+acf(data)
+pacf(diff(data))
+adfTest(data,lags=2,type=("c"))
+adfTest(data,lags=2,type=("ct"))
+```
+
+## Data after differencing
+
+```{r pressure, echo=FALSE}
+d_data = diff(data)
+acf(d_data)
+pacf(diff(d_data))
+adfTest(d_data,lags=2,type=("c"))
+adfTest(d_data,lags=2,type=("ct"))
+```
+
+## Try different models (based on previous ACF and PACF analysis)
+### ARIMA(2,0,3) 
+
+```{r pressure2, echo=FALSE}
+model = arima(d_data, order=c(3,0,6))
+model
+Box.Ljung.Test(residuals(model), lag = 30)
+```

@@ -1,0 +1,43 @@
+---
+title: "Q5_Monte_Carlo_Simulation"
+author: "Kamin Atsavasirilert"
+date: "2024-10-09"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Monte Carlo Simulation for H and G
+
+```{r cars}
+n_path = 10000
+n = 10000
+dt = 1 / n
+epsilon = 0.0000000001
+
+
+g_values = rep(n_path)
+h_values = rep(n_path)
+for (i in 1:n_path){
+  W = 0
+  total_sum = 0
+  for (j in 1:n){
+    W = W + rnorm(1) * sqrt(dt)
+    total_sum = total_sum + (W^2) * dt
+  }
+  g_values[i] = 0.5 * (W^2 - 1) / (total_sum + epsilon)
+  h_values[i] = 0.5 * (W^2 - 1) / sqrt(total_sum + epsilon)
+}
+
+
+```
+## G Function
+```{r cars1}
+hist(g_values)
+quantile(g_values,0.05)
+```
+## H Function
+```{r cars2}
+hist(h_values)
+quantile(h_values,0.05)
+```
